@@ -1217,9 +1217,9 @@ function draw(){const g=box(),B=busy?"disabled":"";let h=`<div class="gt"><div c
  else{const t={pending:["⏳","Waiting for activation",`Hi ${esc(info&&info.name||"")}. Your account is ready. Send the subscription payment to the admin and he will activate it.`],
   expired:["⌛","Your subscription ended",`It ended on ${fmt(info&&info.end)}. Contact the admin to renew.`],
   stopped:["⛔","Subscription stopped","Contact the admin."],
-  device:["📱","Opened on another device","Your account is now open on another phone. You can use it on one device at a time."],
+  device:["📱","Registered on another phone","Your account works on one phone only. If you changed your phone, contact the admin to move your account to this phone."],
   net:["📶","No internet connection","Connect to the internet once to check your subscription."]}[view]||["!","Something went wrong",esc(msg)];
-  h+=`<div class="gi">${t[0]}</div><h2>${t[1]}</h2><p class="gs big">${t[2]}</p>${view==="device"?`<button class="gp" ${B} onclick="GATE.claim()">Use it on this device</button>`:`<button class="gp" ${B} onclick="GATE.recheck()">${busy?"Checking…":"Check again"}</button>`}${view!=="net"?`<button class="gl" onclick="GATE.out()">Log out</button>`:""}`}
+  h+=`<div class="gi">${t[0]}</div><h2>${t[1]}</h2><p class="gs big">${t[2]}</p><button class="gp" ${B} onclick="GATE.recheck()">${busy?"Checking…":"Check again"}</button>${view!=="net"?`<button class="gl" onclick="GATE.out()">Log out</button>`:""}`}
  g.innerHTML=h+`</div>`;const f=g.querySelector("input");if(f&&!busy&&(view==="login"||view==="new"))setTimeout(()=>{if(!g.contains(document.activeElement))f.focus({preventScroll:true})},50)}
 function result(r){busy=false;if(r&&r.ok){lock(false);if(r.admin)try{localStorage.setItem("abosalih-admin","1")}catch(e){}if(typeof home==="function"&&S.mode==="home")home();return}
  info=r;view=(r&&r.why)||"login";if(view==="login")SB.logout();lock(true);msg="";draw()}
@@ -1233,7 +1233,7 @@ const o={
   if(f.name.trim().length<3){msg="Write your full name.";keep();return}if(f.phone.replace(/\D/g,"").length<9){msg="Write your phone number.";keep();return}
   if(!SB.okU(f.u.trim().toLowerCase())){msg="Username: 3 to 20 English letters or numbers, no spaces.";keep();return}if(f.p.length<6){msg="Password must be at least 6 characters.";keep();return}if(f.p!==p2){msg="The two passwords are different.";keep();return}
   busy=true;msg="";draw();try{result(await SB.signup(f))}catch(e){busy=false;msg=nice(e);keep()}},
- async recheck(){busy=true;draw();try{result(await SB.check(false))}catch(e){busy=false;if(e.status===401||e.status===400){SB.logout();view="login";msg="Please log in again."}else{view="net"}draw()}},
+ async recheck(){busy=true;draw();try{result(await SB.check(view==="device"))}catch(e){busy=false;if(e.status===401||e.status===400){SB.logout();view="login";msg="Please log in again."}else{view="net"}draw()}},
  async claim(){busy=true;draw();try{result(await SB.check(true))}catch(e){busy=false;view="net";draw()}},
  out(){SB.logout();view="login";msg="";lock(true);draw()},
  async start(){if(!active())return lock(false);
@@ -1273,7 +1273,7 @@ function rowHTML(r){const s=st(r),B=BADGE[s],d=days(r.end_at),op=open===r.id,ph=
  <div class="sb-d">${s==="wait"?`<span>Joined ${fmt(r.created_at)}</span>`:`<span>${fmt(r.start_at)} → ${fmt(r.end_at)}</span><b class="${d!=null&&d<=7?"lo":""}">${d==null?"":d<0?"ended":d+" days left"}</b>`}</div></div>
  ${op?`<div class="sb-x">${conf||`<div class="adm-hint">${s==="wait"?"Activate":"New subscription"} starting today:</div><div class="adm-btns">${plans("activate")}</div>`}
  <div class="adm-hint">Last opened: ${ago(r.last_seen)}${r.device?"":" · no device yet"}</div>
- <div class="adm-btns">${ph?`<a class="adm-b" href="https://wa.me/${wa}" target="_blank" rel="noopener">WhatsApp</a>`:""}${s!=="stop"&&s!=="wait"?`<button class="adm-b dg" ${busy?"disabled":""} onclick="SUBS.act('stop','${r.id}')">Stop</button>`:""}<button class="adm-b" ${busy?"disabled":""} onclick="SUBS.act('device','${r.id}')">Free device</button></div>
+ <div class="adm-btns">${ph?`<a class="adm-b" href="https://wa.me/${wa}" target="_blank" rel="noopener">WhatsApp</a>`:""}${s!=="stop"&&s!=="wait"?`<button class="adm-b dg" ${busy?"disabled":""} onclick="SUBS.act('stop','${r.id}')">Stop</button>`:""}</div>${r.device?`<div class="adm-hint">Changed phone? Tap this, then they log in on the new phone. The old phone stops working.</div><div class="adm-btns"><button class="adm-b" ${busy?"disabled":""} onclick="SUBS.act('device','${r.id}')">Move to a new phone</button></div>`:""}
  <div class="adm-row"><label>New password for this person<input id="sbPw" placeholder="at least 6 characters" autocomplete="off"></label><div class="adm-btns" style="align-items:flex-end"><button class="adm-b" ${busy?"disabled":""} onclick="SUBS.pass('${r.id}')">Set password</button></div></div>
  ${pw===r.id?`<div class="adm-btns"><span class="adm-hint">Delete this account for good?</span><button class="adm-b dg" onclick="SUBS.act('delete','${r.id}')">Delete</button><button class="adm-b" onclick="SUBS.delAsk(null)">Keep</button></div>`:`<button class="adm-link" style="align-self:flex-start;color:#be123c" onclick="SUBS.delAsk('${r.id}')">Delete account</button>`}</div>`:""}</div>`}
 const o={
@@ -1286,7 +1286,7 @@ const o={
  toggle(id){open=open===id?null:id;pw="";ask=null;paint()},
  askAct(a,id,m){ask=a?{a,id,m}:null;paint()},
  delAsk(id){pw=id;paint()},
- async act(a,id,m){ask=null;busy=true;paint();try{await SB.admin(a,id,m);toast2(a==="activate"?"✓ Activated":a==="extend"?"✓ Extended":a==="stop"?"Stopped":a==="device"?"✓ Device freed":a==="delete"?"Deleted":"Done");if(a==="delete")open=null;pw=""}catch(e){toast2("✕ "+e.message)}busy=false;rows=await SB.list().catch(()=>rows);paint()},
+ async act(a,id,m){ask=null;busy=true;paint();try{await SB.admin(a,id,m);toast2(a==="activate"?"✓ Activated":a==="extend"?"✓ Extended":a==="stop"?"Stopped":a==="device"?"✓ They can log in on the new phone now":a==="delete"?"Deleted":"Done");if(a==="delete")open=null;pw=""}catch(e){toast2("✕ "+e.message)}busy=false;rows=await SB.list().catch(()=>rows);paint()},
  async pass(id){const v=(document.getElementById("sbPw")||{}).value||"";if(v.length<6){toast2("At least 6 characters");return}busy=true;paint();try{await SB.admin("password",id,0,v);toast2("✓ Password changed. Send it to them.")}catch(e){toast2("✕ "+e.message)}busy=false;paint()}
 };
 {const s=document.createElement("style");s.textContent=`#subsBox{display:flex;flex-direction:column;gap:12px}.sb-f{display:flex;flex-wrap:wrap;gap:6px}.sb-f button{height:36px;padding:0 12px;border-radius:999px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink);font-weight:700;font-size:13px}.sb-f button.on{background:#2563eb;border-color:#2563eb;color:#fff}.sb-f button b{opacity:.7;margin-left:2px}.sb-f .sb-r{margin-left:auto;width:36px;padding:0;font-size:17px}.sb-i{border:1.5px solid var(--line);border-radius:14px;overflow:hidden}.sb-h{display:flex;gap:10px;justify-content:space-between;align-items:center;padding:11px 13px;cursor:pointer}.sb-h .t{min-width:0}.sb-h .m{font-size:12.5px;color:#64748b}.sb-d{display:flex;flex-direction:column;align-items:flex-end;font-size:12.5px;color:#64748b;white-space:nowrap}.sb-d b{color:#166534;font-size:13.5px}.sb-d b.lo{color:#c2410c}.sb-c{background:#eff6ff;border:1.5px solid #bfdbfe;border-radius:12px;padding:11px 12px;font-size:14.5px;line-height:1.6;display:flex;flex-direction:column;gap:8px}.sb-x{border-top:1px solid var(--line);padding:11px 13px;display:flex;flex-direction:column;gap:9px;background:rgba(91,151,247,.05)}a.adm-b{display:inline-flex;align-items:center;text-decoration:none}`;document.head.appendChild(s)}
