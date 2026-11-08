@@ -949,7 +949,7 @@ function exReview(f){setMode("exam");const e=EXR;if(!e)return;const L=[];let tt=
 const chip=(k,t)=>`<button class="btn ${f===k?"on":""}" onclick="exReview('${k}')">${t}</button>`;
 app.innerHTML=`<button class="btn backb" onclick="setMode('exam');app.innerHTML=EXH">‹ Result</button><div class="row" style="gap:6px;margin:0 0 8px">${chip("all","All")}${chip("wr","Wrong / skipped")}${chip("nk","No key")}</div>${tn?`<div class="note" style="margin:0 0 8px">Average ${Math.round(tt/tn/1000)} s per question</div>`:""}`+L.map(([i,g,st,pk])=>{const q=Q[g],tm=e.t&&e.t[i]?Math.round(e.t[i]/1000)+" s":"";return `<div class="rvq"><div class="qhead"><b>#${i+1} · ${q[0]}</b><span>${st==="ok"?"✓":st==="wr"?"✗":st==="na"?"skipped":"no key"}${tm?" · "+tm:""}</span></div><p class="q qbox">${q[3]}</p>`+q[4].map((t,k)=>`<div class="rvo ${k===q[5]?"c":k===pk&&q[5]!=null?"w":""}"><b>${String.fromCharCode(65+k)}.</b> ${t}${k===pk?" ◀ you":""}</div>`).join("")+(q[6]?`<div class="note">${q[6]}</div>`:"")+`</div>`}).join("")||`<div class="note">Nothing here.</div>`;scrollTo(0,0)}
 function showMock(){setMode("mock");const sav=exLoad();
-const C=S.mkc=Object.assign({sub:"",n:120,type:"all",who:"all"},S.mkc||{});if(![10,20,30,40,50,60,90,100,120].includes(+C.n))C.n=Math.min(120,[10,20,30,40,50,60,90,100,120].find(x=>x>=+C.n)||120);if(Array.isArray(C.subs)){C.sub=C.subs.length===1?C.subs[0]:"";delete C.subs}
+const C=S.mkc=Object.assign({sub:"",n:120},S.mkc||{});C.type="all";C.who="all";if(![10,20,30,40,50,60,90,100,120].includes(+C.n))C.n=Math.min(120,[10,20,30,40,50,60,90,100,120].find(x=>x>=+C.n)||120);if(Array.isArray(C.subs)){C.sub=C.subs.length===1?C.subs[0]:"";delete C.subs}
 if(C.sub&&!SUBJ.includes(C.sub))C.sub="";const yrs=[...new Set(recalls().map(r=>+((r.match(/\d{4}/)||[])[0])).filter(Boolean))].sort((a,b)=>b-a);
 if(!["all","rep"].includes(C.type)&&!yrs.includes(+String(C.type).slice(2)))C.type="all";
 const pool=mkFilter(C),N=Math.min(+C.n||0,pool.length),mins=Math.max(1,Math.round(N*1.5));
@@ -961,8 +961,6 @@ ${sav?`<button class="resume" style="width:100%;margin:10px 0 0;height:46px;bord
 <div class="mkf">
 <div class="mkrow"><label>Subject</label>${sel("sub",[["","All subjects ("+cnt("")+")"],...SUBJ.filter(v=>cnt(v)).map(v=>[v,v+" ("+cnt(v)+")"])])}</div>
 <div class="mkrow"><label>Questions</label>${sel("n",[10,20,30,40,50,60,90,100,120].map(n=>[n,n+" questions"]))}</div>
-<div class="mkrow"><label>Type</label>${sel("type",[["all","All questions"],["rep","Repeated (2+ recalls)"],...yrs.map(y=>["y:"+y,"Recall "+y])])}</div>
-<div class="mkrow"><label>Include</label>${sel("who",[["all","All"],["new","Not answered yet"],["wr","My mistakes"]])}</div>
 <div class="mkrow"><label>Time</label><span class="mkv">${mins>=60?Math.floor(mins/60)+" h "+(mins%60?mins%60+" min":""):mins+" min"}<small style="display:block;font-weight:600;color:#64748b;font-size:12px;text-align:right">${N} Q × 1.5 min</small></span></div>
 </div>
 <div class="mksum">${pool.length<(+C.n||0)?`<span style="color:#dc2626">⚠ You chose ${+C.n}, but only <b style="color:#dc2626">${pool.length}</b> questions match.<br>Exam will have ${N} questions.</span>`:`<b>${pool.length}</b> questions available`}</div>
@@ -974,7 +972,7 @@ return ALL().filter(i=>{const q=Q[i];if(q[5]==null)return false;if(C.sub&&q[0]!=
  const k=qkey(i);if(seen.has(k))return false;seen.add(k);return true})}
 function mkSet(k,v){S.mkc=S.mkc||{};S.mkc[k]=k==="n"?+v:v;save();showMock()}
 function mkStart(){const C=S.mkc,pool=shuf(mkFilter(C)),N=Math.min(+C.n||0,pool.length);if(!N)return;const mins=Math.max(1,Math.round(N*1.5)),ty=String(C.type);
- const t=(C.sub||"All")+(ty==="rep"?" · Repeated":ty.startsWith("y:")?" · Recall "+ty.slice(2):"")+" · "+N+" Q";startExam(pool.slice(0,N),mins,"Mock: "+t,0)}
+ const t=(C.sub||"All")+" · "+N+" Q";startExam(pool.slice(0,N),mins,"Mock: "+t,0)}
 /* stats */
 function showStats(){setMode("stats");const rows=SUBJ.map(v=>{const ix=ALL().filter(i=>Q[i][0]===v);let d=0,k=0,c=0;ix.forEach(i=>{const p=S.P[Q[i][9]];if(p){d++;if(Q[i][5]!=null){k++;if(p[1])c++}}});return{v,n:ix.length,d,k,c}});
 let D=0,K=0,C=0;rows.forEach(r=>{D+=r.d;K+=r.k;C+=r.c});const days=[];for(let i=6;i>=0;i--){const x=new Date();x.setDate(x.getDate()-i);days.push([["Su","Mo","Tu","We","Th","Fr","Sa"][x.getDay()],(S.act||{})[dayKey(x)]||0])}const mx=Math.max(S.goal||20,...days.map(d=>d[1]));
