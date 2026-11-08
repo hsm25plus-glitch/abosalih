@@ -1257,7 +1257,7 @@ const BADGE={wait:["Waiting","#fef9c3","#854d0e"],on:["Active","#dcfce7","#16653
 const box=()=>document.getElementById("subsBox");
 const paint=()=>{const b=box();if(b)b.innerHTML=inner()};
 async function load(){err="";try{rows=await SB.list()}catch(e){err=/JWT|401|expired/i.test(e.message)?"login":String(e.message);if(err==="login")SB.logout()}paint()}
-function loginHTML(){return `<div class="adm-card"><h3>Log in to see subscribers</h3><div class="adm-hint">Use your admin account (username <b>abosalih</b>).</div><div class="adm-row"><label>Username<input id="saU" autocapitalize="none" value="abosalih"></label><label>Password<input id="saP" type="password"></label></div>${err&&err!=="login"?`<div class="adm-hint" style="color:#be123c">${esc(err)}</div>`:""}<div class="adm-btns"><button class="adm-b pri" onclick="SUBS.login()">Log in</button></div></div>`}
+function loginHTML(){return `<div class="adm-card"><h3>Log in to see subscribers</h3><div class="adm-hint">Use your admin account (username <b>abosalih</b>).</div><div class="adm-row"><label>Username<input id="saU" autocapitalize="none" value="abosalih"></label><label>Password<input id="saP" type="password"></label></div>${err&&err!=="login"?`<div class="adm-hint" style="color:#be123c">${esc(err)}</div>`:""}<div class="adm-btns"><button class="adm-b pri" onclick="SUBS.login()">Log in</button></div><div class="adm-hint">First time? Write a password above (at least 6 characters), then <button class="adm-link" onclick="SUBS.create()">create the admin account</button>.</div></div>`}
 function inner(){if(!SB.signedIn())return loginHTML();if(rows==null)return err?`<div class="adm-card"><div class="adm-hint" style="color:#be123c">${esc(err)}</div><div class="adm-btns"><button class="adm-b" onclick="SUBS.reload()">Try again</button></div></div>`:`<div class="adm-card"><div class="adm-hint">Loading subscribers…</div></div>`;
  const L=rows.filter(r=>!r.is_admin),c=k=>L.filter(r=>st(r)===k).length;
  const F=[["all","All",L.length],["wait","Waiting",c("wait")],["on","Active",c("on")+c("soon")],["soon","Ends ≤7 days",c("soon")],["exp","Expired / stopped",c("exp")+c("stop")]];
@@ -1276,6 +1276,8 @@ function rowHTML(r){const s=st(r),B=BADGE[s],d=days(r.end_at),op=open===r.id,ph=
 const o={
  html(){if(SB.signedIn()&&rows==null&&!err)setTimeout(load,0);return `<div id="subsBox">${inner()}</div>`},
  async login(){const u=document.getElementById("saU").value,p=document.getElementById("saP").value;err="";try{await SB.login(u,p);rows=null;load()}catch(e){err=/Invalid login/i.test(e.message)?"Wrong username or password.":e.message;paint()}},
+ async create(){const u=document.getElementById("saU").value.trim().toLowerCase(),p=document.getElementById("saP").value;if(u!=="abosalih"){err="The admin username must be abosalih.";paint();return}if(p.length<6){err="Password must be at least 6 characters.";paint();return}
+  err="";try{await SB.signup({u,p,name:"AboSalih Admin",phone:""});rows=null;toast2("✓ Admin account created");load()}catch(e){err=/already|registered|exists/i.test(e.message)?"The admin account already exists. Log in with its password.":/Failed to fetch|NetworkError|Load failed/i.test(e.message)?"No internet connection.":e.message;paint()}},
  reload(){rows=null;err="";paint();load()},
  filter(k){f=k;open=null;paint()},
  toggle(id){open=open===id?null:id;pw="";paint()},
