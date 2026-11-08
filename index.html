@@ -1195,7 +1195,7 @@ async function login(u,p){u=uname(u);keep(await req("/auth/v1/token?grant_type=p
 async function signup(f){const u=uname(f.u);const j=await req("/auth/v1/signup",{method:"POST",body:JSON.stringify({email:u+DOM,password:f.p,data:{username:u,full_name:f.name.trim(),phone:f.phone.trim()}})},false);
  if(!j||!j.access_token)throw new Error("Could not create the account. Try again.");keep(j);return check(true)}
 async function rpc(fn,args){await fresh();return req("/rest/v1/rpc/"+fn,{method:"POST",body:JSON.stringify(args)})}
-async function check(claim){const r=await rpc("subs_check",{dev:dev(),claim:!!claim});if(r&&r.ok)LS.set("pass",{end:r.end||null,name:r.name||"",admin:!!r.admin,at:Date.now()});else LS.set("pass",null);return r}
+async function check(claim){const r=await rpc("subs_check",{dev:dev(),claim:!!claim});if(r&&r.ok)LS.set("pass",{end:r.end||null,name:r.name||"",admin:!!r.admin,at:Date.now()});else if(r&&r.why==="expired")LS.set("pass",{end:r.end||new Date(0).toISOString(),name:r.name||"",at:Date.now()});else LS.set("pass",null);return r}
 function logout(){const s=LS.get("sess");if(s)req("/auth/v1/logout",{method:"POST"}).catch(()=>{});LS.set("sess",null);LS.set("pass",null)}
 async function list(){await fresh();return req("/rest/v1/subs?select=*&order=created_at.desc")}
 const admin=(act,uid,months,pass)=>rpc("subs_admin",{act,uid,months:months||0,pass:pass||null});
@@ -1238,12 +1238,12 @@ const o={
  out(){SB.logout();view="login";msg="";lock(true);draw()},
  async start(){if(!active())return lock(false);
   if(passOK()){lock(false);if(!navigator.onLine||!SB.signedIn())return;try{const r=await SB.check(false);if(!(r&&r.ok))result(r)}catch(e){if(e.status===401||e.status===400){SB.logout();view="login";lock(true);draw()}}return}
-  lock(true);if(!SB.signedIn()){view="login";draw();return}view="net";busy=true;draw();
+  lock(true);if(!SB.signedIn()){view="login";draw();return}{const p=SB.LS.get("pass");if(p&&p.end&&new Date(p.end)<new Date()){info={end:p.end};view="expired";draw();return}}view="net";busy=true;draw();
   try{result(await SB.check(false))}catch(e){busy=false;if(e.status===401||e.status===400){SB.logout();view="login"}else view="net";draw()}}
 };
 {const st=document.createElement("style");st.textContent=`html.gated body>*:not(#gate):not(script):not(style){visibility:hidden!important}#gate{position:fixed;inset:0;z-index:2147483000;background:#f4f8ff;overflow:auto;display:flex;justify-content:center;align-items:flex-start;padding:calc(env(safe-area-inset-top) + 28px) 16px 40px;box-sizing:border-box;font-family:system-ui,-apple-system,sans-serif;color:#0f172a}#gate .gt{width:100%;max-width:400px;background:#fff;border:1.5px solid #dbeafe;border-radius:22px;padding:22px 20px;display:flex;flex-direction:column;gap:12px;box-shadow:0 10px 30px rgba(37,99,235,.08)}#gate .gb{align-self:center;background:#5b97f7;color:#fff;font-weight:800;font-size:26px;border-radius:16px;padding:8px 22px 6px;text-align:center;line-height:1.1}#gate .gb small{display:block;font-size:12px;font-weight:700;opacity:.95}#gate h2{margin:6px 0 0;font-size:20px;text-align:center}#gate label{display:flex;flex-direction:column;gap:5px;font-size:13px;font-weight:700;color:#475569}#gate input{font:16px system-ui,-apple-system,sans-serif;padding:12px;border:1.5px solid #cbd5e1;border-radius:12px;color:#0f172a;background:#fff;width:100%;box-sizing:border-box}#gate input:focus{outline:none;border-color:#2563eb}#gate .gp{height:50px;border:0;border-radius:14px;background:#2563eb;color:#fff;font-size:16px;font-weight:800;margin-top:4px}#gate .gp:disabled{opacity:.6}#gate .gl{background:none;border:0;color:#334155;font-size:14.5px;padding:8px}#gate .gl b{color:#2563eb}#gate .ge{margin:0;background:#fde2e7;color:#be123c;border-radius:10px;padding:9px 12px;font-size:14px;font-weight:600}#gate .gs{margin:0;text-align:center;color:#64748b;font-size:13px}#gate .gs.big{font-size:15px;line-height:1.5;color:#334155}#gate .gi{font-size:44px;text-align:center}`;document.head.appendChild(st)}
 return o})();
-GATE.start();
+GATE.start();setInterval(()=>{try{if(document.getElementById("gate"))return;const p=SB.LS.get("pass");if(p&&p.end&&new Date(p.end)<new Date()&&!(localStorage.getItem("abosalih-admin")==="1"))GATE.start()}catch(e){}},30000);document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"&&!document.getElementById("gate")){const p=SB.LS.get("pass");if(p&&p.end&&new Date(p.end)<new Date())GATE.start()}});
 
 /* ---------- admin: Subscribers tab ---------- */
 window.SUBS=(()=>{
