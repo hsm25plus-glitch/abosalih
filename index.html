@@ -700,7 +700,7 @@ try{const d=JSON.parse(localStorage.getItem(K)||"{}"),s=d.s||{};Object.assign(S,
 for(const k of ["P","pos","pp","act","rv","fl","nt","dr","mk","ed"])if(!S[k]||typeof S[k]!=="object"||Array.isArray(S[k]))S[k]={};if(!Array.isArray(S.bm))S.bm=[];
 try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}
 if(!["sub","rec","ref"].includes(S.nav))S.nav="sub";
-function save(noTs){BL=null;try{migIds()}catch(e){}if(!noTs)S.ts=Date.now();try{localStorage.setItem(K,JSON.stringify({s:{P:S.P,pos:S.pos,last:S.last,lb:S.lb,fs:S.fs,fsv:2,nav:S.nav,pp:S.pp,bm:S.bm,act:S.act,rv:S.rv,fl:S.fl,nt:S.nt,dr:S.dr,goal:S.goal,exam:S.exam,ssc:S.ssc,mk:S.mk,ed:S.ed,ts:S.ts},th:document.documentElement.dataset.theme||""}));if(!noTs)snapDay()}catch(e){try{window.SYNC&&SYNC.warn("⚠ Could not save on this device. Copy a backup now.")}catch(x){}}if(!noTs&&window.SYNC)SYNC.push()}
+function save(noTs){BL=null;try{migIds()}catch(e){}if(!noTs)S.ts=Date.now();try{localStorage.setItem(K,JSON.stringify({s:{P:S.P,pos:S.pos,last:S.last,lb:S.lb,fs:S.fs,fsv:2,nav:S.nav,pp:S.pp,bm:S.bm,act:S.act,rv:S.rv,fl:S.fl,nt:S.nt,dr:S.dr,goal:S.goal,exam:S.exam,ssc:S.ssc,mk:S.mk,mkc:S.mkc,ed:S.ed,ts:S.ts},th:document.documentElement.dataset.theme||""}));if(!noTs)snapDay()}catch(e){try{window.SYNC&&SYNC.warn("⚠ Could not save on this device. Copy a backup now.")}catch(x){}}if(!noTs&&window.SYNC)SYNC.push()}
 function snapDay(){const d=new Date().toISOString().slice(0,10);let m={};try{m=JSON.parse(localStorage.getItem("abosalih-snap")||"{}")}catch(e){}if(m[d]||Object.keys(S.P).length<5)return;m[d]=expJSON();const ks=Object.keys(m).sort();while(ks.length>5)delete m[ks.shift()];try{localStorage.setItem("abosalih-snap",JSON.stringify(m))}catch(e){}}
 function snapList(){try{return Object.keys(JSON.parse(localStorage.getItem("abosalih-snap")||"{}")).sort().reverse()}catch(e){return[]}}
 function snapRestore(d){try{const m=JSON.parse(localStorage.getItem("abosalih-snap")||"{}");if(!m[d])return;$("#bi").value=m[d];bkImp()}catch(e){}}
@@ -886,7 +886,7 @@ function saveNote(){const id=Q[S.L[S.i]][9],v=$("#nt").value.trim();if(v)S.nt[id
 /* study tab */
 function studyHTML(){S.sqs="";S.ssc="all";if(S.ssc.startsWith("rec|")&&!recalls().includes(S.ssc.slice(4)))S.ssc="all";const sc=S.ssc,base=scopeList(sc),t=(S.act||{})[dayKey()]||0,g=S.goal||20,de=daysToExam(),st=streak();
 const due=base.filter(isDue),wr=base.filter(isWrong),hy=base.filter(i=>frq(i)>=2),un=base.filter(i=>!S.P[Q[i][9]]),fg=base.filter(isFlag),kx=base.filter(i=>Q[i][5]!=null);
-const items=[["❌","Mistakes",wr.length,"wr"],["⭐","High-yield",hy.length,"hy"],["🚩","Flagged",fg.length,"fg"],["🎓","Mock Exam","10 exams","mk"],["📊","Stats","","st"]];
+const items=[["❌","Mistakes",wr.length,"wr"],["⭐","High-yield",hy.length,"hy"],["🚩","Flagged",fg.length,"fg"],["🎓","Mock Exam","Build your own","mk"],["📊","Stats","","st"]];
 const opts=`<option value="all">All Qs</option><option value="rec*">All years</option>`+SUBJ.map(v=>`<option value="sub|${v}">${v}</option>`).join("")+recalls().map(r=>`<option value="rec|${r}">${r}</option>`).join("");
 if(S.ssc&&S.ssc.startsWith("sub|")&&!SUBJ.includes(S.ssc.slice(4)))S.ssc="all";
 const dn=base.filter(i=>S.P[Q[i][9]]).length,pc2=base.length?Math.round(dn/base.length*100):0;
@@ -948,10 +948,36 @@ app.innerHTML=`<div class="rbox"><div class="rbig">${pc}%</div><div>${ok} / ${N}
 function exReview(f){setMode("exam");const e=EXR;if(!e)return;const L=[];let tt=0,tn=0;e.ix.forEach((g,i)=>{const q=Q[g],pk=e.a[i],st=q[5]==null?"nk":pk==null?"na":pk===q[5]?"ok":"wr";if(e.t&&e.t[i]){tt+=e.t[i];tn++}if(f==="all"||f===st||(f==="wr"&&st==="na"))L.push([i,g,st,pk])});
 const chip=(k,t)=>`<button class="btn ${f===k?"on":""}" onclick="exReview('${k}')">${t}</button>`;
 app.innerHTML=`<button class="btn backb" onclick="setMode('exam');app.innerHTML=EXH">‹ Result</button><div class="row" style="gap:6px;margin:0 0 8px">${chip("all","All")}${chip("wr","Wrong / skipped")}${chip("nk","No key")}</div>${tn?`<div class="note" style="margin:0 0 8px">Average ${Math.round(tt/tn/1000)} s per question</div>`:""}`+L.map(([i,g,st,pk])=>{const q=Q[g],tm=e.t&&e.t[i]?Math.round(e.t[i]/1000)+" s":"";return `<div class="rvq"><div class="qhead"><b>#${i+1} · ${q[0]}</b><span>${st==="ok"?"✓":st==="wr"?"✗":st==="na"?"skipped":"no key"}${tm?" · "+tm:""}</span></div><p class="q qbox">${q[3]}</p>`+q[4].map((t,k)=>`<div class="rvo ${k===q[5]?"c":k===pk&&q[5]!=null?"w":""}"><b>${String.fromCharCode(65+k)}.</b> ${t}${k===pk?" ◀ you":""}</div>`).join("")+(q[6]?`<div class="note">${q[6]}</div>`:"")+`</div>`}).join("")||`<div class="note">Nothing here.</div>`;scrollTo(0,0)}
-function showMock(){setMode("mock");const sav=exLoad();let rows="";
-for(let n=1;n<=10;n++){const ix=mockSet(n),m=S.mk[n];rows+=`<button class="card mk" onclick="startExam(mockSet(${n}),180,'Mock ${n}',${n})"><span class="ic">🎓</span><b class="t">Mock ${n}</b><span class="n">${ix.length} Q · 3 h</span><span class="n">${m?"Last "+m.last+"% · Best "+m.best+"%":"Not taken"}</span></button>`}
-const comp=MOCKC.map(c=>c[0].replace("Statistics","Stats").replace(" Physiology"," Phys.")+" "+c[1]).join(" · ");
-app.innerHTML=`${sav?`<button class="resume" style="width:100%;margin:0 0 10px;height:46px;border-radius:14px" onclick="exResume()">Resume ${sav.title} · ${Object.keys(sav.a).length}/${sav.ix.length} done</button>`:""}<div class="grid">${rows}</div>`}
+function showMock(){setMode("mock");const sav=exLoad();
+const C=S.mkc=Object.assign({subs:[],n:100,type:"all",y1:"",y2:"",who:"all",mins:""},S.mkc||{});
+const yrs=[...new Set(recalls().map(r=>+((r.match(/\d{4}/)||[])[0])).filter(Boolean))].sort((a,b)=>a-b);
+if(!C.y1||!yrs.includes(+C.y1))C.y1=yrs[0]||"";if(!C.y2||!yrs.includes(+C.y2))C.y2=yrs[yrs.length-1]||"";
+const pool=mkFilter(C),ks=SUBJ.map(v=>[v,ALL().filter(i=>Q[i][0]===v&&Q[i][5]!=null).length]);
+const ch=(on,js,t,dis)=>`<button class="mkc${on?" on":""}" ${dis?"disabled":""} onclick="${js}">${t}</button>`;
+const subOn=v=>C.subs.includes(v);
+const N=Math.min(+C.n||0,pool.length),mins=+C.mins||Math.max(1,Math.round(N*1.5));
+app.innerHTML=`<style>#mkb .mkg{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 4px}#mkb .mkc{flex:1 1 auto;min-width:72px;height:42px;padding:0 12px;border-radius:12px;border:1.5px solid #bfdbfe;background:#fff;color:#1e3a8a;font-weight:700;font-size:15px}#mkb .mkc.on{background:#2563eb;border-color:#2563eb;color:#fff}#mkb .mkc:disabled{opacity:.35}#mkb .mkc small{font-weight:600;opacity:.75;margin-left:4px}#mkb .mkn{width:96px;height:42px;border-radius:12px;border:1.5px solid #bfdbfe;text-align:center;font-size:16px;font-weight:700;color:#1e3a8a}#mkb select{height:42px;border-radius:12px;border:1.5px solid #bfdbfe;padding:0 10px;font-size:15px;font-weight:700;color:#1e3a8a;background:#fff}#mkb .mkr{display:flex;align-items:center;gap:10px;flex-wrap:wrap}#mkb .mksum{margin:16px 0 10px;padding:14px;border-radius:14px;background:#eff6ff;border:1.5px solid #bfdbfe;text-align:center;font-weight:700;color:#1e3a8a}#mkb .mkgo{width:100%;height:52px;border-radius:14px;border:0;background:#2563eb;color:#fff;font-size:18px;font-weight:800}#mkb .mkgo:disabled{opacity:.4}#mkb .sh{margin:14px 0 8px}</style>
+<div id="mkb"><button class="btn backb" onclick="S.nav='stu';save();home()">‹ Study</button>
+${sav?`<button class="resume" style="width:100%;margin:8px 0 4px;height:46px;border-radius:14px" onclick="exResume()">Resume ${sav.title} · ${Object.keys(sav.a).length}/${sav.ix.length} done</button>`:""}
+<h4 class="sh">1. Subjects</h4><div class="mkg" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr))">${ch(!C.subs.length,"mkSet('subs',[])","All")}${ks.map(([v,k])=>ch(subOn(v),`mkSub('${v}')`,v+`<small>${k}</small>`,!k)).join("")}</div>
+<h4 class="sh">2. Number of questions</h4><div class="mkg" style="display:grid;grid-template-columns:repeat(4,1fr)">${[30,60,100,120].map(n=>ch(+C.n===n,`mkSet('n',${n})`,n)).join("")}</div><div class="mkr" style="margin-top:8px">Other: <input class="mkn" type="number" min="1" max="999" inputmode="numeric" value="${[30,60,100,120].includes(+C.n)?"":C.n}" placeholder="—" onchange="mkSet('n',Math.max(1,+this.value||1))"></div>
+<h4 class="sh">3. Type</h4><div class="mkg">${ch(C.type==="all","mkSet('type','all')","All")}${ch(C.type==="rep","mkSet('type','rep')","Repeated (2+ recalls)")}${ch(C.type==="rec","mkSet('type','rec')","From recalls")}</div>
+<h4 class="sh">4. Recall years</h4><div class="mkr">From <select onchange="mkSet('y1',+this.value)">${yrs.map(y=>`<option ${+C.y1===y?"selected":""}>${y}</option>`).join("")}</select> to <select onchange="mkSet('y2',+this.value)">${yrs.map(y=>`<option ${+C.y2===y?"selected":""}>${y}</option>`).join("")}</select></div>
+<div class="note" style="margin-top:6px">${C.type==="all"?"Years apply to “Repeated” and “From recalls”.":"Only questions that appeared in these years."}</div>
+<h4 class="sh">5. Questions</h4><div class="mkg">${ch(C.who==="all","mkSet('who','all')","All")}${ch(C.who==="new","mkSet('who','new')","Not answered yet")}${ch(C.who==="wr","mkSet('who','wr')","My mistakes")}</div>
+<h4 class="sh">6. Time (minutes)</h4><div class="mkr"><input class="mkn" type="number" min="1" max="999" inputmode="numeric" placeholder="${Math.max(1,Math.round(N*1.5))}" value="${C.mins}" onchange="mkSet('mins',this.value?Math.max(1,+this.value):'')"><span class="note">Empty = auto (1.5 min per question)</span></div>
+<div class="mksum">${pool.length} questions match${pool.length<+C.n?` · exam will have ${N}`:""} · ${mins} min</div>
+<button class="mkgo" ${N?"":"disabled"} onclick="mkStart()">Start ${N} questions</button>
+<div class="note" style="margin-top:8px;text-align:center">Only questions with an answer key are used.</div></div>`}
+function mkFilter(C){const y1=+C.y1||0,y2=+C.y2||9999,inY=r=>{const y=+((r.match(/\d{4}/)||[])[0]);return y>=y1&&y<=y2};const seen=new Set();
+return ALL().filter(i=>{const q=Q[i];if(q[5]==null)return false;if(C.subs.length&&!C.subs.includes(q[0]))return false;
+ const ry=q[1].filter(inY);if(C.type==="rep"&&ry.length<2)return false;if(C.type==="rec"&&!ry.length)return false;
+ const p=S.P[q[9]];if(C.who==="new"&&p)return false;if(C.who==="wr"&&!isWrong(i))return false;
+ const k=qkey(i);if(seen.has(k))return false;seen.add(k);return true})}
+function mkSet(k,v){S.mkc=S.mkc||{};S.mkc[k]=v;if(k==="y1"&&+S.mkc.y2<v)S.mkc.y2=v;if(k==="y2"&&+S.mkc.y1>v)S.mkc.y1=v;save();showMock()}
+function mkSub(v){const C=S.mkc||(S.mkc={subs:[]});C.subs=C.subs||[];C.subs=C.subs.includes(v)?C.subs.filter(x=>x!==v):[...C.subs,v];save();showMock()}
+function mkStart(){const C=S.mkc,pool=shuf(mkFilter(C)),N=Math.min(+C.n||0,pool.length);if(!N)return;const mins=+C.mins||Math.max(1,Math.round(N*1.5));
+ const t=(C.subs.length?C.subs.length>2?C.subs.length+" subjects":C.subs.join(" + "):"All")+" · "+N+" Q";startExam(pool.slice(0,N),mins,"Mock: "+t,0)}
 /* stats */
 function showStats(){setMode("stats");const rows=SUBJ.map(v=>{const ix=ALL().filter(i=>Q[i][0]===v);let d=0,k=0,c=0;ix.forEach(i=>{const p=S.P[Q[i][9]];if(p){d++;if(Q[i][5]!=null){k++;if(p[1])c++}}});return{v,n:ix.length,d,k,c}});
 let D=0,K=0,C=0;rows.forEach(r=>{D+=r.d;K+=r.k;C+=r.c});const days=[];for(let i=6;i>=0;i--){const x=new Date();x.setDate(x.getDate()-i);days.push([["Su","Mo","Tu","We","Th","Fr","Sa"][x.getDay()],(S.act||{})[dayKey(x)]||0])}const mx=Math.max(S.goal||20,...days.map(d=>d[1]));
