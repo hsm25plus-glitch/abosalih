@@ -886,7 +886,7 @@ function saveNote(){const id=Q[S.L[S.i]][9],v=$("#nt").value.trim();if(v)S.nt[id
 /* study tab */
 function studyHTML(){S.sqs="";S.ssc="all";if(S.ssc.startsWith("rec|")&&!recalls().includes(S.ssc.slice(4)))S.ssc="all";const sc=S.ssc,base=scopeList(sc),t=(S.act||{})[dayKey()]||0,g=S.goal||20,de=daysToExam(),st=streak();
 const due=base.filter(isDue),wr=base.filter(isWrong),hy=base.filter(i=>frq(i)>=2),un=base.filter(i=>!S.P[Q[i][9]]),fg=base.filter(isFlag),kx=base.filter(i=>Q[i][5]!=null);
-const items=[["❌","Mistakes",wr.length,"wr"],["⭐","High-yield",hy.length,"hy"],["🆕","Not done",un.length,"un"],["🚩","Flagged",fg.length,"fg"],["🎓","Mock Exam","10 exams","mk"],["📊","Stats","","st"],["💾","Backup","","bk"]];
+const items=[["❌","Mistakes",wr.length,"wr"],["⭐","High-yield",hy.length,"hy"],["🚩","Flagged",fg.length,"fg"],["🎓","Mock Exam","10 exams","mk"],["📊","Stats","","st"]];
 const opts=`<option value="all">All Qs</option><option value="rec*">All years</option>`+SUBJ.map(v=>`<option value="sub|${v}">${v}</option>`).join("")+recalls().map(r=>`<option value="rec|${r}">${r}</option>`).join("");
 if(S.ssc&&S.ssc.startsWith("sub|")&&!SUBJ.includes(S.ssc.slice(4)))S.ssc="all";
 const dn=base.filter(i=>S.P[Q[i][9]]).length,pc2=base.length?Math.round(dn/base.length*100):0;
