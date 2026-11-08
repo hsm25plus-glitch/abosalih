@@ -1,0 +1,21 @@
+name: Build APK
+on: {push: {branches: [android]}, workflow_dispatch: {}}
+permissions: {contents: write}
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: {distribution: temurin, java-version: '17'}
+      - uses: gradle/actions/setup-gradle@v4
+        with: {gradle-version: '8.7'}
+      - run: gradle :app:assembleRelease --no-daemon --stacktrace 2>&1 | tail -60
+      - run: ls -la app/build/outputs/apk/release/
+      - name: Publish APK to the site
+        run: |
+          cp app/build/outputs/apk/release/app-release.apk /tmp/AboSalih.apk
+          git config user.name "hsm25plus-glitch"; git config user.email "hsm25plus-glitch@users.noreply.github.com"
+          git fetch -q origin gh-pages && git checkout -q gh-pages
+          cp /tmp/AboSalih.apk AboSalih.apk && git add AboSalih.apk
+          git commit -q -m "Android app (APK) built from the android branch" && git push -q origin gh-pages

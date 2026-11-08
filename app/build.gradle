@@ -1,0 +1,9 @@
+plugins{id 'com.android.application'}
+android{
+ namespace 'com.abosalih.og'
+ compileSdk 34
+ defaultConfig{applicationId "com.abosalih.og";minSdk 23;targetSdk 34;versionCode 1;versionName "1.0"}
+ signingConfigs{rel{storeFile file('abosalih.jks');storePassword 'abosalih2026';keyAlias 'abosalih';keyPassword 'abosalih2026'}}
+ buildTypes{release{minifyEnabled false;signingConfig signingConfigs.rel}}
+ compileOptions{sourceCompatibility JavaVersion.VERSION_17;targetCompatibility JavaVersion.VERSION_17}
+}
