@@ -963,7 +963,7 @@ ${sav?`<button class="resume" style="width:100%;margin:10px 0 0;height:46px;bord
 <div class="mkrow"><label>Questions</label>${sel("n",[10,20,30,40,50,60,90,100,120].map(n=>[n,n+" questions"]))}</div>
 <div class="mkrow"><label>Type</label>${sel("type",[["all","All questions"],["rep","Repeated (2+ recalls)"],...yrs.map(y=>["y:"+y,"Recall "+y])])}</div>
 <div class="mkrow"><label>Include</label>${sel("who",[["all","All"],["new","Not answered yet"],["wr","My mistakes"]])}</div>
-<div class="mkrow"><label>Time</label><span class="mkv">${mins>=60?Math.floor(mins/60)+" h "+(mins%60?mins%60+" min":""):mins+" min"}</span></div>
+<div class="mkrow"><label>Time</label><span class="mkv">${mins>=60?Math.floor(mins/60)+" h "+(mins%60?mins%60+" min":""):mins+" min"}<small style="display:block;font-weight:600;color:#64748b;font-size:12px;text-align:right">${N} Q × 1.5 min</small></span></div>
 </div>
 <div class="mksum">${pool.length<(+C.n||0)?`Only <b>${pool.length}</b> questions match — exam will have <b>${N}</b>`:`<b>${pool.length}</b> questions available`}</div>
 <button class="mkgo" ${N?"":"disabled"} onclick="mkStart()">Start ${N} questions</button></div>`}
