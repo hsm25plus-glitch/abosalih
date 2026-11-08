@@ -954,7 +954,7 @@ if(C.sub&&!SUBJ.includes(C.sub))C.sub="";const yrs=[...new Set(recalls().map(r=>
 if(!["all","rep"].includes(C.type)&&!yrs.includes(+String(C.type).slice(2)))C.type="all";
 const pool=mkFilter(C),N=Math.min(+C.n||0,pool.length),mins=Math.max(1,Math.round(N*1.5));
 const sel=(k,opts)=>`<select onchange="mkSet('${k}',this.value)">`+opts.map(([v,t])=>`<option value="${v}" ${String(C[k])===String(v)?"selected":""}>${t}</option>`).join("")+`</select>`;
-const cnt=v=>ALL().filter(i=>Q[i][5]!=null&&(!v||Q[i][0]===v)).length;
+const cnt=v=>{const sn=new Set();return ALL().filter(i=>(!v||Q[i][0]===v)&&!sn.has(qkey(i))&&sn.add(qkey(i))).length};
 app.innerHTML=`<style>#mkb{max-width:560px;margin:0 auto}#mkb .mkf{border:1.5px solid #dbeafe;border-radius:16px;background:#fff;overflow:hidden;margin-top:10px}#mkb .mkrow{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;border-bottom:1px solid #eef4ff}#mkb .mkrow:last-child{border-bottom:0}#mkb .mkrow label{font-weight:700;color:#334155;font-size:15px}#mkb select{flex:0 1 62%;min-width:0;height:42px;border-radius:12px;border:1.5px solid #bfdbfe;padding:0 10px;font-size:15px;font-weight:700;color:#1e3a8a;background:#f8fbff}#mkb .mkv{font-weight:800;color:#1e3a8a}#mkb .mksum{margin:14px 0 10px;text-align:center;color:#475569;font-weight:600}#mkb .mksum b{color:#1e3a8a}#mkb .mkgo{width:100%;height:52px;border-radius:14px;border:0;background:#2563eb;color:#fff;font-size:18px;font-weight:800}#mkb .mkgo:disabled{opacity:.4}</style>
 <div id="mkb"><button class="btn backb" onclick="S.nav='stu';save();home()">‹ Study</button>
 ${sav?`<button class="resume" style="width:100%;margin:10px 0 0;height:46px;border-radius:14px" onclick="exResume()">Resume ${sav.title} · ${Object.keys(sav.a).length}/${sav.ix.length} done</button>`:""}
@@ -965,7 +965,7 @@ ${sav?`<button class="resume" style="width:100%;margin:10px 0 0;height:46px;bord
 
 <button class="mkgo" ${N?"":"disabled"} onclick="mkStart()">Start</button></div>`}
 function mkFilter(C){const ty=String(C.type||"all"),yr=ty.startsWith("y:")?ty.slice(2):"",seen=new Set();
-return ALL().filter(i=>{const q=Q[i];if(q[5]==null)return false;if(C.sub&&q[0]!==C.sub)return false;
+return ALL().filter(i=>{const q=Q[i];if(C.sub&&q[0]!==C.sub)return false;
  if(ty==="rep"&&q[1].length<2)return false;if(yr&&!q[1].some(r=>r.includes(yr)))return false;
  const p=S.P[q[9]];if(C.who==="new"&&p)return false;if(C.who==="wr"&&!isWrong(i))return false;
  const k=qkey(i);if(seen.has(k))return false;seen.add(k);return true})}
