@@ -1434,8 +1434,8 @@ window.PEN={moreC(){P.more=!P.more;sizes();const el=document.getElementById("pzp
  hide(k){TBS.o=TBS.o.filter(x=>x!==k);if(!TBS.h.includes(k))TBS.h.push(k);tbSave();rerenderTb()},
  show(k){TBS.h=TBS.h.filter(x=>x!==k);if(!TBS.o.includes(k))TBS.o.push(k);tbSave();rerenderTb()},
  reset(){TBS.o=TBD.slice();TBS.h=[];tbSave();rerenderTb()},
- fav(i){const x=P.fav[i];if(!x||P.edit)return;if(lpFired){lpFired=false;return}{const bb=document.querySelector('.pen [data-fi="'+i+'"]');if(bb&&bb.classList.contains("act")){PEN.favMenu(i);return}}closePop();P.lock=false;if(P.api)P.api.unsel();setTool(x.t);P.last=x.t;P.col=x.c;if(x.t==="m"){P.colm=x.c;P.wm=x.w;P.am=x.a==null?.6:x.a}else{P.colp=x.c;P.wp=x.w}syncTb()},
- addFav(){const t=P.tool==="m"?"m":"p",x={t,c:P.col,w:t==="m"?P.wm:P.wp};if(t==="m")x.a=P.am;if(!P.fav.some(y=>y.t===x.t&&y.c===x.c&&Math.abs(y.w-x.w)<.3&&(t!=="m"||Math.abs((y.a||.6)-x.a)<.05))){P.fav.push(x);if(P.fav.length>8)P.fav.shift();favSave();favRender()}try{navigator.vibrate&&navigator.vibrate(15)}catch(e){}closePop()},
+ fav(i){const x=P.fav[i];if(!x||P.edit)return;if(lpFired){lpFired=false;return}closePop();P.lock=false;if(P.api)P.api.unsel();setTool(x.t);P.last=x.t;P.col=x.c;if(x.t==="m"){P.colm=x.c;P.wm=x.w;P.am=x.a==null?.6:x.a}else{P.colp=x.c;P.wp=x.w}syncTb()},
+ addFav(){if(P.fav.length>=6){toast2("Favourites are full (6). Drag one out first");return false}const t=P.tool==="m"?"m":"p",x={t,c:P.col,w:t==="m"?P.wm:P.wp};if(t==="m")x.a=P.am;if(P.fav.some(y=>y.t===x.t&&String(y.c).toLowerCase()===String(x.c).toLowerCase()&&Math.abs(y.w-x.w)<.3)){toast2("Already in favourites");return false}if(!P.fav.some(y=>y.t===x.t&&y.c===x.c&&Math.abs(y.w-x.w)<.3&&(t!=="m"||Math.abs((y.a||.6)-x.a)<.05))){P.fav.push(x);if(P.fav.length>8)P.fav.shift();favSave();favRender()}try{navigator.vibrate&&navigator.vibrate(15)}catch(e){}closePop()},
  delFav(i){if(P.fav.length<=1)return;P.fav.splice(i,1);favSave();favRender();try{navigator.vibrate&&navigator.vibrate(25)}catch(e){}},
  closeP(){closePop()},
  width(v){v=+v;if(P.tool==="s"&&P.api&&P.api.setWv(v)){pvUpdate();return}if(P.tool==="m")P.wm=v;else P.wp=v;pvUpdate();savePrefs();const szi=document.querySelector("#pzb .szi");if(szi)szi.style.height=(P.tool==="m"?Math.max(4,P.wm*1.1):Math.max(1.5,P.wp*.7))+"px";favSync()},
@@ -1510,7 +1510,7 @@ try{P.colp=PRE.p.c[PRE.p.ci];P.wp=PRE.p.w[PRE.p.wi];P.colm=PRE.m.c[PRE.m.ci];P.w
 const preSave=()=>{try{localStorage.setItem("abosalih-pre",JSON.stringify(PRE))}catch(e){}};
 const preK=()=>P.tool==="m"?"m":"p";
 const preDot=(k,w)=>{const lo=k==="m"?3:1,hi=k==="m"?24:20;return Math.round(4+(Math.max(lo,Math.min(hi,w))-lo)/(hi-lo)*14)};
-const favHTML=()=>P.fav.map((x,i)=>`<button class="fv" data-fi="${i}" aria-label="Favourite ${i+1}" style="--pc:${x.c};color:${lumOf(x.c)>.62?"#111":"#fff"}" onclick="PEN.fav(${i})">${favIc(x)}<i class="fvw" style="height:${Math.max(2,Math.min(8,x.w*(x.t==="m"?.35:.8)))}px"></i></button>`).join("")+(P.fav.length<6?`<button type="button" class="fadd" aria-label="Add pen">+</button>`:"")+`<button type="button" class="fman" aria-label="Manage pens"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 7h10M4 12h16M4 17h7"/><circle cx="17" cy="7" r="2"/><circle cx="14" cy="17" r="2"/></svg></button>`;
+const favHTML=()=>P.fav.map((x,i)=>`<button class="fv" data-fi="${i}" aria-label="Favourite ${i+1}" style="--pc:${x.c};color:${lumOf(x.c)>.62?"#111":"#fff"}" onclick="PEN.fav(${i})">${favIc(x)}<i class="fvw" style="height:${Math.max(2,Math.min(8,x.w*(x.t==="m"?.35:.8)))}px"></i></button>`).join("");
 function favRender(){const e=document.getElementById("pfav");if(e){e.innerHTML=favHTML();e.dataset.k="fav"}favSync()}
 function favSave(){try{localStorage.setItem("abosalih-pfav",JSON.stringify(P.fav))}catch(e){}}
 function favSync(){const e=document.getElementById("pfav");if(e&&e.dataset.k!=="fav"){e.innerHTML=favHTML();e.dataset.k="fav"}document.querySelectorAll(".pen [data-fi]").forEach(b=>{const x=P.fav[+b.dataset.fi];b.classList.toggle("act",!!x&&P.tool===x.t&&String(P.col).toLowerCase()===x.c.toLowerCase()&&Math.abs((x.t==="m"?P.wm:P.wp)-x.w)<.3)})}
@@ -1766,7 +1766,7 @@ document.addEventListener("change",e=>{if(!(e.target.closest&&e.target.closest("
 document.addEventListener("click",e=>{const t=e.target.closest&&e.target.closest("#ppen [data-ppt],#ppen [data-ppc],#ppen [data-ppmore],#ppen [data-ppg],#ppen [data-ppw],#ppen [data-ppfav]");if(!t)return;e.stopPropagation();e.preventDefault();const m=document.getElementById("ppen"),k=m.dataset.k,x=PRE[k];
  if(t.dataset.ppt){PEN.pty(t.dataset.ppt,true);ppRe();return}
  if(t.dataset.ppmore){const g=m.querySelector(".ppm");g.hidden=!g.hidden;return}
- if(t.dataset.ppfav){PEN.addFav();toast2("★ Added to favourites");ppClose();return}
+ if(t.dataset.ppfav){if(PEN.addFav()!==false)toast2("★ Added to favourites");ppClose();return}
  if(t.dataset.ppc!=null){x.ci=+t.dataset.ppc;const c=x.c[x.ci];if(k==="m")P.colm=c;else P.colp=c;P.col=c}
  else if(t.dataset.ppg){const c=t.dataset.ppg.toLowerCase();x.c[x.ci]=c;if(k==="m")P.colm=c;else P.colp=c;P.col=c}
  else if(t.dataset.ppw!=null){x.wi=+t.dataset.ppw;oneApplyW()}
