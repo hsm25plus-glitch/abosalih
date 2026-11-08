@@ -1247,7 +1247,8 @@ GATE.start();setInterval(()=>{try{if(document.getElementById("gate"))return;cons
 
 /* ---------- admin: Subscribers tab ---------- */
 window.SUBS=(()=>{
-let rows=null,err="",f="all",open=null,busy=false,pw="";
+let rows=null,err="",f="all",open=null,busy=false,pw="",ask=null;
+const addM=(d,m)=>{const x=new Date(d);x.setMonth(x.getMonth()+m);return x};
 const esc=t=>String(t??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const fmt=d=>d?new Date(d).toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"2-digit"}):"—";
 const days=d=>d?Math.ceil((new Date(d)-Date.now())/864e5):null;
@@ -1265,10 +1266,14 @@ function inner(){if(!SB.signedIn())return loginHTML();if(rows==null)return err?`
  return `<div class="sb-f">${F.map(([k,t,n])=>`<button class="${f===k?"on":""}" onclick="SUBS.filter('${k}')">${t} <b>${n}</b></button>`).join("")}<button class="sb-r" aria-label="Refresh" onclick="SUBS.reload()">↻</button></div>
  <div class="adm-list">${show.length?show.map(rowHTML).join(""):`<div class="adm-empty">No one here.</div>`}</div>`}
 function rowHTML(r){const s=st(r),B=BADGE[s],d=days(r.end_at),op=open===r.id,ph=String(r.phone||"").replace(/[^\d+]/g,""),wa=ph.replace(/^\+/,"").replace(/^0/,"249");
- const plans=act=>[1,3,6].map(m=>`<button class="adm-b ${act==="activate"?"pri":""}" ${busy?"disabled":""} onclick="SUBS.act('${act}','${r.id}',${m})">${m} month${m>1?"s":""}</button>`).join("");
+ const plans=act=>[1,3,6].map(m=>`<button class="adm-b ${act==="activate"?"pri":""}" ${busy?"disabled":""} onclick="SUBS.askAct('${act}','${r.id}',${m})">${m} month${m>1?"s":""}</button>`).join("");
+ const live=d!=null&&d>=0&&s!=="stop";
+ const conf=ask&&ask.id===r.id?(()=>{const m=ask.m,fromNow=ask.a==="activate"||!live,base=fromNow?new Date():new Date(r.end_at),end=addM(base,m),ml=m+" month"+(m>1?"s":"");
+  const t=ask.a==="activate"&&s!=="wait"?`Start again from today for <b>${ml}</b>`:ask.a==="activate"?`Activate for <b>${ml}</b>`:live?`Add <b>${ml}</b> to the current end date`:`Renew for <b>${ml}</b> from today`;
+  return `<div class="sb-c"><div>${t}<br>New end date: <b>${fmt(end)}</b> (${Math.ceil((end-Date.now())/864e5)} days)</div><div class="adm-btns"><button class="adm-b pri" ${busy?"disabled":""} onclick="SUBS.act('${ask.a==="activate"||!live?"activate":"extend"}','${r.id}',${m})">Confirm</button><button class="adm-b" onclick="SUBS.askAct(null)">Cancel</button></div></div>`})():"";
  return `<div class="sb-i"><div class="sb-h" onclick="SUBS.toggle('${r.id}')"><div class="t"><b>${esc(r.full_name||r.username)}</b> <span class="chip" style="background:${B[1]};color:${B[2]}">${B[0]}</span><div class="m">@${esc(r.username)}${ph?` · ${esc(r.phone)}`:""}</div></div>
  <div class="sb-d">${s==="wait"?`<span>Joined ${fmt(r.created_at)}</span>`:`<span>${fmt(r.start_at)} → ${fmt(r.end_at)}</span><b class="${d!=null&&d<=7?"lo":""}">${d==null?"":d<0?"ended":d+" days left"}</b>`}</div></div>
- ${op?`<div class="sb-x">${s==="wait"?`<div class="adm-hint">Activate for:</div><div class="adm-btns">${plans("activate")}</div>`:`<div class="adm-hint">${s==="exp"||s==="stop"?"Renew":"Extend"} by:</div><div class="adm-btns">${plans("extend")}</div>`}
+ ${op?`<div class="sb-x">${conf||(s==="wait"?`<div class="adm-hint">Activate for:</div><div class="adm-btns">${plans("activate")}</div>`:live?`<div class="adm-hint">Add more time (after ${fmt(r.end_at)}):</div><div class="adm-btns">${plans("extend")}</div><div class="adm-hint">Wrong dates? Start again from today:</div><div class="adm-btns">${plans("activate")}</div>`:`<div class="adm-hint">Renew from today for:</div><div class="adm-btns">${plans("extend")}</div>`)}
  <div class="adm-hint">Last opened: ${ago(r.last_seen)}${r.device?"":" · no device yet"}</div>
  <div class="adm-btns">${ph?`<a class="adm-b" href="https://wa.me/${wa}" target="_blank" rel="noopener">WhatsApp</a>`:""}${s!=="stop"&&s!=="wait"?`<button class="adm-b dg" ${busy?"disabled":""} onclick="SUBS.act('stop','${r.id}')">Stop</button>`:""}<button class="adm-b" ${busy?"disabled":""} onclick="SUBS.act('device','${r.id}')">Free device</button></div>
  <div class="adm-row"><label>New password for this person<input id="sbPw" placeholder="at least 6 characters" autocomplete="off"></label><div class="adm-btns" style="align-items:flex-end"><button class="adm-b" ${busy?"disabled":""} onclick="SUBS.pass('${r.id}')">Set password</button></div></div>
@@ -1280,12 +1285,13 @@ const o={
   err="";try{await SB.signup({u,p,name:"AboSalih Admin",phone:""});rows=null;toast2("✓ Admin account created");load()}catch(e){err=/already|registered|exists/i.test(e.message)?"The admin account already exists. Log in with its password.":/Failed to fetch|NetworkError|Load failed/i.test(e.message)?"No internet connection.":e.message;paint()}},
  reload(){rows=null;err="";paint();load()},
  filter(k){f=k;open=null;paint()},
- toggle(id){open=open===id?null:id;pw="";paint()},
+ toggle(id){open=open===id?null:id;pw="";ask=null;paint()},
+ askAct(a,id,m){ask=a?{a,id,m}:null;paint()},
  delAsk(id){pw=id;paint()},
- async act(a,id,m){busy=true;paint();try{await SB.admin(a,id,m);toast2(a==="activate"?"✓ Activated":a==="extend"?"✓ Extended":a==="stop"?"Stopped":a==="device"?"✓ Device freed":a==="delete"?"Deleted":"Done");if(a==="delete")open=null;pw=""}catch(e){toast2("✕ "+e.message)}busy=false;rows=await SB.list().catch(()=>rows);paint()},
+ async act(a,id,m){ask=null;busy=true;paint();try{await SB.admin(a,id,m);toast2(a==="activate"?"✓ Activated":a==="extend"?"✓ Extended":a==="stop"?"Stopped":a==="device"?"✓ Device freed":a==="delete"?"Deleted":"Done");if(a==="delete")open=null;pw=""}catch(e){toast2("✕ "+e.message)}busy=false;rows=await SB.list().catch(()=>rows);paint()},
  async pass(id){const v=(document.getElementById("sbPw")||{}).value||"";if(v.length<6){toast2("At least 6 characters");return}busy=true;paint();try{await SB.admin("password",id,0,v);toast2("✓ Password changed. Send it to them.")}catch(e){toast2("✕ "+e.message)}busy=false;paint()}
 };
-{const s=document.createElement("style");s.textContent=`#subsBox{display:flex;flex-direction:column;gap:12px}.sb-f{display:flex;flex-wrap:wrap;gap:6px}.sb-f button{height:36px;padding:0 12px;border-radius:999px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink);font-weight:700;font-size:13px}.sb-f button.on{background:#2563eb;border-color:#2563eb;color:#fff}.sb-f button b{opacity:.7;margin-left:2px}.sb-f .sb-r{margin-left:auto;width:36px;padding:0;font-size:17px}.sb-i{border:1.5px solid var(--line);border-radius:14px;overflow:hidden}.sb-h{display:flex;gap:10px;justify-content:space-between;align-items:center;padding:11px 13px;cursor:pointer}.sb-h .t{min-width:0}.sb-h .m{font-size:12.5px;color:#64748b}.sb-d{display:flex;flex-direction:column;align-items:flex-end;font-size:12.5px;color:#64748b;white-space:nowrap}.sb-d b{color:#166534;font-size:13.5px}.sb-d b.lo{color:#c2410c}.sb-x{border-top:1px solid var(--line);padding:11px 13px;display:flex;flex-direction:column;gap:9px;background:rgba(91,151,247,.05)}a.adm-b{display:inline-flex;align-items:center;text-decoration:none}`;document.head.appendChild(s)}
+{const s=document.createElement("style");s.textContent=`#subsBox{display:flex;flex-direction:column;gap:12px}.sb-f{display:flex;flex-wrap:wrap;gap:6px}.sb-f button{height:36px;padding:0 12px;border-radius:999px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink);font-weight:700;font-size:13px}.sb-f button.on{background:#2563eb;border-color:#2563eb;color:#fff}.sb-f button b{opacity:.7;margin-left:2px}.sb-f .sb-r{margin-left:auto;width:36px;padding:0;font-size:17px}.sb-i{border:1.5px solid var(--line);border-radius:14px;overflow:hidden}.sb-h{display:flex;gap:10px;justify-content:space-between;align-items:center;padding:11px 13px;cursor:pointer}.sb-h .t{min-width:0}.sb-h .m{font-size:12.5px;color:#64748b}.sb-d{display:flex;flex-direction:column;align-items:flex-end;font-size:12.5px;color:#64748b;white-space:nowrap}.sb-d b{color:#166534;font-size:13.5px}.sb-d b.lo{color:#c2410c}.sb-c{background:#eff6ff;border:1.5px solid #bfdbfe;border-radius:12px;padding:11px 12px;font-size:14.5px;line-height:1.6;display:flex;flex-direction:column;gap:8px}.sb-x{border-top:1px solid var(--line);padding:11px 13px;display:flex;flex-direction:column;gap:9px;background:rgba(91,151,247,.05)}a.adm-b{display:inline-flex;align-items:center;text-decoration:none}`;document.head.appendChild(s)}
 return o})();
 
 if(S.mode==="home"&&S.nav==="adm")home();
