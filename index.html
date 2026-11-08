@@ -961,10 +961,9 @@ ${sav?`<button class="resume" style="width:100%;margin:10px 0 0;height:46px;bord
 <div class="mkf">
 <div class="mkrow"><label>Subject</label>${sel("sub",[["","All subjects ("+cnt("")+")"],...SUBJ.filter(v=>cnt(v)).map(v=>[v,v+" ("+cnt(v)+")"])])}</div>
 <div class="mkrow"><label>Questions</label>${sel("n",[10,20,30,40,50,60,90,100,120].map(n=>[n,n+" questions"]))}</div>
-<div class="mkrow"><label>Time</label><span class="mkv">${mins>=60?Math.floor(mins/60)+" h "+(mins%60?mins%60+" min":""):mins+" min"}<small style="display:block;font-weight:600;color:#64748b;font-size:12px;text-align:right">${N} Q × 1.5 min</small></span></div>
 </div>
-<div class="mksum">${pool.length<(+C.n||0)?`<span style="color:#dc2626">⚠ You chose ${+C.n}, but only <b style="color:#dc2626">${pool.length}</b> questions match.<br>Exam will have ${N} questions.</span>`:`<b>${pool.length}</b> questions available`}</div>
-<button class="mkgo" ${N?"":"disabled"} onclick="mkStart()">Start ${N} questions</button></div>`}
+
+<button class="mkgo" ${N?"":"disabled"} onclick="mkStart()">Start</button></div>`}
 function mkFilter(C){const ty=String(C.type||"all"),yr=ty.startsWith("y:")?ty.slice(2):"",seen=new Set();
 return ALL().filter(i=>{const q=Q[i];if(q[5]==null)return false;if(C.sub&&q[0]!==C.sub)return false;
  if(ty==="rep"&&q[1].length<2)return false;if(yr&&!q[1].some(r=>r.includes(yr)))return false;
